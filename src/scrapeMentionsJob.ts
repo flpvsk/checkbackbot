@@ -1,26 +1,73 @@
+import * as chrono from "chrono-node"
 import { TweetId } from "./types"
 import { storage } from "./storage"
-import { twitter } from "./twitter"
+import * as twitter from "./twitterWrapper"
 const JOB_NAME = "scrapeMentions"
 
 interface ScrapeMentionsJobData {
-  newest_id: TweetId
+  mostRecentTweetId?: TweetId
+  error?: string
 }
 
 export async function run(): Promise<void> {
   const lastRun = await storage.getLastJobData<ScrapeMentionsJobData>(JOB_NAME)
-  const tweets = twitter.getMentions({
-    after: lastRun?.newest_id,
-    userId: process.env.TW_BOT_USER_ID,
-    token: process.env.TW_BEARER_TOKEN
-  })
-  for await (const tweet of tweets) {
-    console.log(tweet)
+
+  const userId = process.env.TW_BOT_USER_ID
+  const token = process.env.TW_BEARER_TOKEN
+
+  if (!userId) {
+    console.warn("TW_BOT_USER_ID not set, aborting")
+    return
   }
-  // get [last] scaped mention id
-  // [page] in pages
-  //    get mentions since [last] for [page]
-  //    save mentions to db
-  //    [newLast] = lastMentionTweetIdSaved
-  // save [newLast]
+
+  if (!token) {
+    console.warn("TW_BEARER_TOKEN not set, aborting")
+    return
+  }
+
+  const tweets = twitter.getMentions({
+    after: lastRun?.mostRecentTweetId,
+    userId,
+    token,
+  })
+
+  let mostRecentTweetId: TweetId | undefined;
+  let error: string | undefined;
+  try {
+    for await (const tweetInfo of tweets) {
+      if (!mostRecentTweetId) {
+        mostRecentTweetId = tweetInfo.tweet.id
+      }
+
+      // it's a tweet for this bot
+      /*
+      if (tweetInfo.tweet.author_id === userId) {
+        continue
+      }
+      */
+
+      const toPostOn = chrono.parseDate(
+        tweetInfo.tweet.text,
+        new Date(tweetInfo.tweet.created_at),
+        { forwardDate: true }
+      )
+
+      if (!toPostOn) {
+        continue
+      }
+
+      const meta = { toPostOn }
+      await storage.insertIncomingTweet(tweetInfo, meta)
+      await storage.insertRepost(tweetInfo, meta)
+      await storage.insertConfirmation(tweetInfo, meta)
+    }
+  } catch (e) {
+    console.warn("Error processing tweets", e)
+    error = e.stack
+    mostRecentTweetId = lastRun?.mostRecentTweetId
+  }
+  storage.insertJobData<ScrapeMentionsJobData>(JOB_NAME, {
+    mostRecentTweetId: mostRecentTweetId ?? lastRun?.mostRecentTweetId,
+    error
+  })
 }

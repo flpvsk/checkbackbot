@@ -1,6 +1,12 @@
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-import { run } from "./scrapeMentionsJob"
+import * as scrapeMentionsJob from "./scrapeMentionsJob"
+import * as postTweetsJob from "./postTweetsJob"
 
-run()
+async function main() {
+  await scrapeMentionsJob.run()
+  await postTweetsJob.run()
+}
+
+main().catch(e => console.error(e))

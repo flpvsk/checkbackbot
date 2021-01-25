@@ -44,7 +44,7 @@ export async function run(): Promise<void> {
 
       // it's a tweet for this bot
       if (tweetInfo.tweet.author_id === userId) {
-        // continue
+        continue
       }
 
       const toPostOn = chrono.parseDate(
@@ -56,6 +56,9 @@ export async function run(): Promise<void> {
       )
 
       if (!toPostOn) {
+        console.log(
+          `[scrape] could not parse date in "${tweetInfo.tweet.text}"`,
+        )
         continue
       }
 

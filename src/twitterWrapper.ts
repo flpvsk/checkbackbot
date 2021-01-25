@@ -76,6 +76,7 @@ export async function* getMentions({
       const replyToId = tweet.referenced_tweets?.find(
         (t) => t.type === 'replied_to',
       )?.id
+
       if (!replyToId) {
         console.warn(
           `${tweet.id} is not in reply to any tweet, skipping`,
@@ -239,7 +240,7 @@ async function getPage<T>({
   token,
 }: GetPageQuery): Promise<T> {
   if (!!nextToken) {
-    params.next_token = nextToken
+    params.pagination_token = nextToken
   }
 
   const options = {

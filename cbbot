@@ -16,4 +16,15 @@ yargs(hideBin(process.argv))
     console.log('[post] start')
     await post.run()
     console.log('[post] done')
+  })
+  .command('all', 'scrape then post', async () => {
+
+    console.log('[scrape] start')
+    await scrape.run()
+    console.log('[scrape] done')
+
+    console.log('[post] start')
+    await post.run()
+    console.log('[post] done')
+
   }).argv

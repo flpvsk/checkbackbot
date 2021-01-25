@@ -1,1 +1,1 @@
-export { liteStorage as storage } from './liteStorage';
+export { liteStorage as storage } from './liteStorage'

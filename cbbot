@@ -1,0 +1,19 @@
+#!/usr/bin/env node
+const dotenv = require('dotenv')
+dotenv.config()
+const yargs = require('yargs/yargs')
+const { hideBin } = require('yargs/helpers')
+const scrape = require('./build/scrapeMentionsJob')
+const post = require('./build/postTweetsJob')
+
+yargs(hideBin(process.argv))
+  .command('scrape', 'run the scrape tweets job', async () => {
+    console.log('[scrape] start')
+    await scrape.run()
+    console.log('[scrape] done')
+  })
+  .command('post', 'run the post tweets job', async () => {
+    console.log('[post] start')
+    await post.run()
+    console.log('[post] done')
+  }).argv

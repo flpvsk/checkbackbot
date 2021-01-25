@@ -46,7 +46,7 @@ export async function run(): Promise<void> {
       userIds.add(uId)
     }
 
-    userIdsByTweetId.set(entry.tweetData.tweet.id, tweetUsers)
+    userIdsByTweetId.set(entry.tweetData.tweet.id, [ entry.tweetData.tweetAuthor.id ])
   }
 
   const usersMap = await twitter.getUsersByIds({
@@ -73,7 +73,6 @@ export async function run(): Promise<void> {
       )
 
       const text = `following up on this tweet ${distance} after it was posted`
-      console.log(text, mentionUsernames, quoteTweetId, quoteTweetUsername)
 
       const result = await twitter.quoteTweet({
         mentionUsernames,
@@ -87,7 +86,6 @@ export async function run(): Promise<void> {
 
     if (entry.tweetType === OutgoingTweetType.confirmation) {
       const text = `ok will follow up on the original tweet on ${entry.metaData.toPostOn}`
-      console.log(text, quoteTweetId, quoteTweetUsername)
 
       const result = await twitter.replyToTweet({
         replyToTweetId: entry.tweetData.tweet.id,

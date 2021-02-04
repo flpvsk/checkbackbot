@@ -73,7 +73,17 @@ export async function run(): Promise<void> {
     error = e.stack
     mostRecentTweetId = lastRun?.mostRecentTweetId
   }
+
   console.log(`[scrape] ${scrapedN} tweet(s) added`)
+
+  if (
+    !mostRecentTweetId ||
+    (!!lastRun && mostRecentTweetId === lastRun.mostRecentTweetId)
+  ) {
+    console.log(`[scrape] no recent tweets, skipping add job`)
+    return
+  }
+
   storage.insertJobData<ScrapeMentionsJobData>(JOB_NAME, {
     mostRecentTweetId:
       mostRecentTweetId ?? lastRun?.mostRecentTweetId,
